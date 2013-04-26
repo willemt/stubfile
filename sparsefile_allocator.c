@@ -386,8 +386,6 @@ void sfa_add_file(
     }
 }
 
-/*----------------------------------------------------------------------------*/
-
 int sfa_get_nfiles(
     void* sfa
 )
@@ -397,7 +395,7 @@ int sfa_get_nfiles(
     return me->nfiles;
 }
 
-const char *sfa_file_get_cwd(
+const char *sfa_file_get_path(
     void* sfa,
     int idx
 )

@@ -9,6 +9,6 @@ void sfa_add_file(void* sfa, const char *fname, const int size);
 
 int sfa_get_nfiles(void* sfa);
 
-const char *sfa_file_get_cwd(void* sfa, int idx);
+const char *sfa_file_get_path(void* sfa, int idx);
 
 void sfa_set_cwd(void * sfa, const char *path);
