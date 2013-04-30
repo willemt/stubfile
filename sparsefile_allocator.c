@@ -1,7 +1,7 @@
 
 /**
  * @file
- * @brief block_rw implementor which dumps files to disk
+ * @brief file manager that allows user to dump data to sparse files
  * @author  Willem Thiart himself@willemthiart.com
  * @version 0.1
  *
@@ -358,6 +358,9 @@ static int __mkpath(
     return 1;
 }
 
+/**
+ * Add a file to the allocator
+ */
 void sfa_add_file(
     void* sfa,
     const char *fname,
@@ -386,6 +389,8 @@ void sfa_add_file(
     }
 }
 
+/**
+ * @return number of files added to allocator */
 int sfa_get_nfiles(
     void* sfa
 )
@@ -395,6 +400,8 @@ int sfa_get_nfiles(
     return me->nfiles;
 }
 
+/**
+ * @return the path of this file pointed to by this index */
 const char *sfa_file_get_path(
     void* sfa,
     int idx
