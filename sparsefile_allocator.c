@@ -307,7 +307,7 @@ static int __mkdir(
 
     if (stat(path, &st) != 0)
     {
-#if LINUX
+#if __LINUX__
         if (mkdir(path, mode) != 0)
 #else
         if (mkdir(path) != 0)
