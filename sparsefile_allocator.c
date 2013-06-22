@@ -300,7 +300,11 @@ void *sfa_new(
 
 static int __mkdir(
     char *path,
+#if WIN32
     mode_t mode __attribute__((__unused__))
+#else
+    mode_t mode
+#endif
 )
 {
     struct stat st;
