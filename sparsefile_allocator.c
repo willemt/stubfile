@@ -307,10 +307,10 @@ static int __mkdir(
 
     if (stat(path, &st) != 0)
     {
-#if LINUX
-        if (mkdir(path, mode) != 0)
-#else
+#if WIN32
         if (mkdir(path) != 0)
+#else
+        if (mkdir(path, mode) != 0)
 #endif
             return -1;
     }
