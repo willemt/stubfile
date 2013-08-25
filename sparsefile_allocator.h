@@ -5,7 +5,12 @@ void *sfa_read(void *sfa, int global_bytepos, int bytes_to_read);
 
 void *sfa_new();
 
-void sfa_add_file(void* sfa, const char *fname, const int size);
+void sfa_add_file(
+    void* sfa,
+    const char *fname,
+    const int fname_len,
+    const int size
+);
 
 int sfa_get_nfiles(void* sfa);
 

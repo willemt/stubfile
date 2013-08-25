@@ -58,6 +58,18 @@ typedef struct
     int size;
 } file_t;
 
+#if WIN32
+static char* strndup(const char* str, const unsigned int len)
+{
+    char* new;
+
+    new = malloc(len+1);
+    strncpy(new,str,len);
+    new[len] = '\0';
+    return new;
+}
+#endif
+
 /**
  * using this global byte pos, get the file that holds this byte
  *
@@ -368,13 +380,16 @@ static int __mkpath(
 void sfa_add_file(
     void* sfa,
     const char *fname,
+    const int fname_len,
     const int size
 )
 {
     sfa_t * me = sfa;
     file_t *file;
 
-//    printf("FILELIST: adding %s\n", fname);
+#if 0 /* debug */
+    printf("FILELIST: adding %.*s\n", fname_len, fname);
+#endif
 
     me->nfiles += 1;
     assert(0 < me->nfiles);
@@ -382,10 +397,12 @@ void sfa_add_file(
     /* increase size of array */
     me->files = realloc(me->files, me->nfiles * sizeof(file_t));
 
+    /* add file */
     file = &((file_t *) me->files)[me->nfiles - 1];
-    file->path = fname;
+    file->path = strndup(fname,fname_len);
     file->size = size;
 
+    /* create physical file */
     __mkpath(file->path, 0777);
     if (!__exists(file->path) || __filesize(file->path) != size)
     {
