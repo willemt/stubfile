@@ -50,6 +50,9 @@ typedef struct
     char *path;
     void *files;
     int nfiles;
+
+    /* total size taken up by files */
+    int size;
 } sfa_t;
 
 typedef struct
@@ -71,9 +74,9 @@ static char* strndup(const char* str, const unsigned int len)
 #endif
 
 /**
- * using this global byte pos, get the file that holds this byte
+ * Using this global byte pos, get the file that holds this byte
  *
- * @param file_bytepos : position on the stream where the file starts
+ * @param file_bytepos Position on the stream where the file starts
  * @return the file that the global byte pos is in */
 static file_t *__get_file_from_bytepos(
     sfa_t * me,
@@ -171,6 +174,7 @@ int sfa_write(
 
         int bwrite = 0;
 
+#if 1
         if (-1 == (fd = open(file->path, O_RDWR, 0777)))
         {
             perror("couldn't open file");
@@ -189,31 +193,61 @@ int sfa_write(
 
         if (-1 == (bwrite = write(fd, data, write_len)))
         {
-            perror("couldn't write\n");
-            exit(0);
-        }
-
-
-        if (bwrite < write_len)
-        {
-//            printf("not enough space: %d/%d\n", bwrite, write_len);
+            //perror("Couldn't write to file %s\n", err_str(errno));
+            printf("Couldn't write to file %s\n", strerror(errno));
 //            exit(0);
-//            return 0;
         }
 
-        if (0 == bwrite)
+        if (bwrite == 0)
         {
-            perror("couldn't write");
+            printf("couldn't write\n");
             exit(0);
         }
 
-        close(fd);
-
-        /*  update our position */
         bytes_to_write -= bwrite;
         global_bytepos += bwrite;
+        data += bwrite;
 
-        //printf("wrote:%d left:%d pos:%d\n", bwrite, bytes_to_write, torr_bytepos);
+        close(fd);
+#else
+	FILE *f;
+
+	if (!(f = fopen(file->path, "wb+")))
+	{
+            fprintf(stderr, "Unable to open file %s", file->path);
+	}
+	
+	if (0 != fseek(f, file_pos, SEEK_SET))
+        {
+            printf("ERROR: couldn't seek: %s %d\n", strerror(errno), file_pos);
+        }
+
+        while (0 < write_len)
+        {
+            if (512 > write_len)
+                bwrite = fwrite(data, 1, write_len, f);
+            else
+                bwrite = fwrite(data, 1, 512, f);
+
+//            printf("a %d %d\n", write_len, bwrite);
+
+            if (bwrite <= 0)
+            {
+                printf("ERRORz: %s %d\n", strerror(errno), bytes_to_write);
+                exit(0);
+            }
+
+            bytes_to_write -= bwrite;
+            write_len -= bwrite;
+            global_bytepos += bwrite;
+            data += bwrite;
+        }
+	fclose(f);
+#endif
+
+        /*  update our position */
+
+//        printf("wrote:%d left:%d pos:%d\n", bwrite, bytes_to_write, 0);//torr_bytepos);
     }
 
     return 1;
@@ -230,25 +264,32 @@ void *sfa_read(
 
     ptr = data_out = malloc(bytes_to_read);
 
-#if 0
-    printf("fd-readblock: %d %d %d\n", blk->piece_idx,
-           blk->block_byte_offset, blk->block_len);
+#if 0 /* debugging */
+    printf("sf-readblock: %d %d\n",
+           global_bytepos, bytes_to_read);
 #endif
 
     while (0 < bytes_to_read)
     {
-        int fd, file_global_bytepos, file_pos, read_len;
+        int file_global_bytepos, file_pos, read_len;
         file_t *file;
 
+        /* find the file to read from */
         if (!(file =
               __get_file_from_bytepos(me, global_bytepos, &file_global_bytepos)))
-        {
+        { 
             return data_out;
         }
 
-//        printf(" reading file: %s (%dB)\n", file->path, bytes_to_read);
+        /* reposition in file */
         file_pos = global_bytepos - file_global_bytepos;
         read_len = bytes_to_read;
+
+#if 0 /* debugging */
+        printf("reading file: %s (%dB)\n", file->path, bytes_to_read);
+        printf("%d %d %d %d\n", 
+                global_bytepos, file_global_bytepos, file_pos, bytes_to_read);
+#endif
 
 #if 0
         /*  check if it is in the boundary of this file */
@@ -261,20 +302,32 @@ void *sfa_read(
 
         int bread = 0;
 
-        if (-1 == (fd = open(file->path, O_RDWR)))
+#if 0
+        /*  Open file */
+        if (-1 == (fd = open(file->path, O_RDONLY)))
         {
-//            perror("couldn't open file");
-//            exit(0);
-            goto skip;
+            perror("Couldn't open file");
+            exit(0);
+//            goto skip;
         }
 
-        if (-1 == lseek(fd, file_pos, SEEK_SET))
+        /*  Seek to offset */
+        if (0 != file_pos)
         {
-            perror("couldn't seek");
+            if (-1 == (new_pos = lseek(fd, file_pos, SEEK_SET)))
+            {
+                perror("Couldn't seek");
+                exit(0);
+            }
+        }
+
+        if (new_pos != file_pos)
+        {
+            printf("not at correct position\n");
             exit(0);
         }
 
-
+        /*  Read */
         if (-1 == (bread = read(fd, ptr, read_len)))
         {
             perror("couldn't read");
@@ -283,15 +336,37 @@ void *sfa_read(
 
         if (0 == bread)
         {
-
+            printf("%s\n", strerror(errno));
+            exit(0);
         }
 
-//        printf("  bread: %d  readlen: %d\n", bread, read_len);
+        printf("read: %d\n", bread);
+
+//       printf("  bread: %d  readlen: %d\n", bread, read_len);
 //        printf("data_out[0] = %x\n", data_out[0]);
 
         close(fd);
+#else
+	FILE *f;
 
-      skip:
+	//Open file
+	if (!(f = fopen(file->path, "rb")))
+	{
+            fprintf(stderr, "Unable to open file %s", file->path);
+	}
+	
+	//Get file length
+//	fseek(f, 0, SEEK_END);
+//	fileLen=ftell(f);
+	fseek(f, file_pos, SEEK_SET);
+
+	//Read file contents into buffer
+	bread = fread(ptr, 1, read_len, f);
+	fclose(f);
+#endif
+
+//        printf("%d\n", bread);
+
         /*  update our position */
         bytes_to_read -= bread;
         ptr += bread;
@@ -392,6 +467,7 @@ void sfa_add_file(
 #endif
 
     me->nfiles += 1;
+    me->size += size;
     assert(0 < me->nfiles);
 
     /* increase size of array */
@@ -453,3 +529,12 @@ void sfa_set_cwd(
         exit(0);
     }
 }
+
+/**
+ * @return total file size in bytes */
+unsigned int sfa_get_total_size(void * sfa)
+{
+    sfa_t* me = sfa;
+    return me->size;
+}
+

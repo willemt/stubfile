@@ -17,3 +17,5 @@ int sfa_get_nfiles(void* sfa);
 const char *sfa_file_get_path(void* sfa, int idx);
 
 void sfa_set_cwd(void * sfa, const char *path);
+
+unsigned int sfa_get_total_size(void * sfa);
