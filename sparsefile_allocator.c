@@ -32,7 +32,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -194,7 +193,7 @@ int sfa_write(
         if (-1 == (bwrite = write(fd, data, write_len)))
         {
             //perror("Couldn't write to file %s\n", err_str(errno));
-            printf("Couldn't write to file %s\n", strerror(errno));
+            //printf("Couldn't write to file %s\n", strerror(errno));
 //            exit(0);
         }
 
