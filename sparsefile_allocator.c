@@ -1,12 +1,6 @@
 
 /**
- * @file
- * @brief file manager that allows user to dump data to sparse files
- * @author  Willem Thiart himself@willemthiart.com
- * @version 0.1
- *
- * @section LICENSE
- * Copyright (c) 2011, Willem-Hendrik Thiart
+Copyright (c) 2011, Willem-Hendrik Thiart
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -147,9 +141,6 @@ int sfa_write(
 
     bytes_to_write = write_len;
 
-//    printf(">>>\n");
-//    printf("WRITING %dB to %d\n", bytes_to_write, global_bytepos);
-
     while (0 < bytes_to_write)
     {
         int fd, file_bytepos, file_pos, write_len;
@@ -173,7 +164,6 @@ int sfa_write(
 
         int bwrite = 0;
 
-#if 1
         if (-1 == (fd = open(file->path, O_RDWR, 0777)))
         {
             perror("couldn't open file");
@@ -187,14 +177,10 @@ int sfa_write(
             exit(0);
         }
 
-//        printf("writing %d: %d to %s (%d,%d,fs:%d/%d)\n", torr_bytepos,
-//               write_len, file->path, file_pos, fd, file_pos, file->size);
-
         if (-1 == (bwrite = write(fd, data, write_len)))
         {
             //perror("Couldn't write to file %s\n", err_str(errno));
             //printf("Couldn't write to file %s\n", strerror(errno));
-//            exit(0);
         }
 
         if (bwrite == 0)
@@ -208,45 +194,7 @@ int sfa_write(
         data += bwrite;
 
         close(fd);
-#else
-	FILE *f;
 
-	if (!(f = fopen(file->path, "wb+")))
-	{
-            fprintf(stderr, "Unable to open file %s", file->path);
-	}
-	
-	if (0 != fseek(f, file_pos, SEEK_SET))
-        {
-            printf("ERROR: couldn't seek: %s %d\n", strerror(errno), file_pos);
-        }
-
-        while (0 < write_len)
-        {
-            if (512 > write_len)
-                bwrite = fwrite(data, 1, write_len, f);
-            else
-                bwrite = fwrite(data, 1, 512, f);
-
-//            printf("a %d %d\n", write_len, bwrite);
-
-            if (bwrite <= 0)
-            {
-                printf("ERRORz: %s %d\n", strerror(errno), bytes_to_write);
-                exit(0);
-            }
-
-            bytes_to_write -= bwrite;
-            write_len -= bwrite;
-            global_bytepos += bwrite;
-            data += bwrite;
-        }
-	fclose(f);
-#endif
-
-        /*  update our position */
-
-//        printf("wrote:%d left:%d pos:%d\n", bwrite, bytes_to_write, 0);//torr_bytepos);
     }
 
     return 1;
@@ -290,81 +238,19 @@ void *sfa_read(
                 global_bytepos, file_global_bytepos, file_pos, bytes_to_read);
 #endif
 
-#if 0
-        /*  check if it is in the boundary of this file */
-        if (file->size < file_pos + read_len)
-        {
-            printf("read shorted\n");
-            read_len = file_pos + read_len - file->size;
-        }
-#endif
 
         int bread = 0;
-
-#if 0
-        /*  Open file */
-        if (-1 == (fd = open(file->path, O_RDONLY)))
-        {
-            perror("Couldn't open file");
-            exit(0);
-//            goto skip;
-        }
-
-        /*  Seek to offset */
-        if (0 != file_pos)
-        {
-            if (-1 == (new_pos = lseek(fd, file_pos, SEEK_SET)))
-            {
-                perror("Couldn't seek");
-                exit(0);
-            }
-        }
-
-        if (new_pos != file_pos)
-        {
-            printf("not at correct position\n");
-            exit(0);
-        }
-
-        /*  Read */
-        if (-1 == (bread = read(fd, ptr, read_len)))
-        {
-            perror("couldn't read");
-            exit(0);
-        }
-
-        if (0 == bread)
-        {
-            printf("%s\n", strerror(errno));
-            exit(0);
-        }
-
-        printf("read: %d\n", bread);
-
-//       printf("  bread: %d  readlen: %d\n", bread, read_len);
-//        printf("data_out[0] = %x\n", data_out[0]);
-
-        close(fd);
-#else
 	FILE *f;
 
-	//Open file
 	if (!(f = fopen(file->path, "rb")))
 	{
             fprintf(stderr, "Unable to open file %s", file->path);
 	}
 	
-	//Get file length
-//	fseek(f, 0, SEEK_END);
-//	fileLen=ftell(f);
 	fseek(f, file_pos, SEEK_SET);
 
-	//Read file contents into buffer
 	bread = fread(ptr, 1, read_len, f);
 	fclose(f);
-#endif
-
-//        printf("%d\n", bread);
 
         /*  update our position */
         bytes_to_read -= bread;
@@ -448,9 +334,6 @@ static int __mkpath(
     return 1;
 }
 
-/**
- * Add a file to the allocator
- */
 void sfa_add_file(
     void* sfa,
     const char *fname,
@@ -485,8 +368,6 @@ void sfa_add_file(
     }
 }
 
-/**
- * @return number of files added to allocator */
 int sfa_get_nfiles(
     void* sfa
 )
@@ -496,8 +377,6 @@ int sfa_get_nfiles(
     return me->nfiles;
 }
 
-/**
- * @return the path of this file pointed to by this index */
 const char *sfa_file_get_path(
     void* sfa,
     int idx
@@ -511,8 +390,6 @@ const char *sfa_file_get_path(
     return file->path;
 }
 
-/**
- * Set current working directory */
 void sfa_set_cwd(
     void* sfa,
     const char *path
@@ -529,8 +406,6 @@ void sfa_set_cwd(
     }
 }
 
-/**
- * @return total file size in bytes */
 unsigned int sfa_get_total_size(void * sfa)
 {
     sfa_t* me = sfa;
