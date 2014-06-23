@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "sparsefile.h"
+#include "stubfile.h"
 
 typedef struct
 {
@@ -113,7 +113,7 @@ static void __create_empty_file(
     int ii;
     for (ii = size; ii > 0; ii -= RANDOM_BITS_LEN)
         write(fd, str, ii < RANDOM_BITS_LEN ? ii : RANDOM_BITS_LEN);
-#else /* nice trick to instantly create sparse file */
+#else /* nice trick to instantly create stub file */
     write(fd, "\0", 1);
     lseek(fd, size - 1, SEEK_SET);
     write(fd, "\0", 1);

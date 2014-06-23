@@ -1,5 +1,5 @@
-#ifndef SPARSEFILE_ALLOCATOR_H
-#define SPARSEFILE_ALLOCATOR_H
+#ifndef STUBFILE_ALLOCATOR_H
+#define STUBFILE_ALLOCATOR_H
 
 int sf_write(void *sf, int global_bytepos, const int write_len, const void *data);
 
@@ -32,4 +32,4 @@ void sf_set_cwd(void * sf, const char *path);
  * @return total file size in bytes */
 unsigned int sf_get_total_size(void * sf);
 
-#endif /* SPARSEFILE_ALLOCATOR_H */
+#endif /* STUBFILE_ALLOCATOR_H */
